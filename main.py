@@ -48,7 +48,7 @@ DB_PATH = os.getenv("DB_PATH")
 
 def process_ladder(conn, riot_api) -> list[str]:
     try:
-        ladder_df = fetch_ladder_with_names(riot_api, 5)
+        ladder_df = fetch_ladder_with_names(riot_api, 300)
 
         previously_active = find_active_players(conn)
         currently_active = set(ladder_df["puuid"].tolist())
