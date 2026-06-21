@@ -4,6 +4,7 @@ from collections import deque
 
 logger = logging.getLogger(__name__)
 
+
 def _clean(target_deque: deque, window: int):
     now = time.time()
     while len(target_deque) > 0 and now - target_deque[0] > window:
@@ -20,18 +21,17 @@ def _check_limit(target_deque: deque, window: int, limit: int):
 
 class RateLimiter:
     """
-        thresholds : liste de tuples (limit, window)
-            limit  -> nombre max de requêtes autorisées
-            window -> durée de la fenêtre en secondes
+    thresholds : liste de tuples (limit, window)
+        limit  -> nombre max de requêtes autorisées
+        window -> durée de la fenêtre en secondes
 
-        Exemple : [(20, 1), (100, 120)]
-        -> 20 requêtes max par seconde, 100 max par 2 minutes
+    Exemple : [(20, 1), (100, 120)]
+    -> 20 requêtes max par seconde, 100 max par 2 minutes
     """
 
     def __init__(self, thresholds: list[tuple[int, int]]):
         self.thresholds = [
-            {"limit": limit, "window": window, "deque": deque()}
-            for limit, window in thresholds
+            {"limit": limit, "window": window, "deque": deque()} for limit, window in thresholds
         ]
 
     def wait_if_needed(self):

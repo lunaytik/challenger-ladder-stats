@@ -82,8 +82,10 @@ def init_db(conn: sqlite3.Connection):
 def upsert_player(conn: sqlite3.Connection, players_data_list: list[tuple]):
     cursor = conn.cursor()
     now = time.time()
-    cursor.executemany("""
-       INSERT INTO players(puuid, game_name, tagline, league_points, rank, wins, losses, tier, queue, in_top, last_updated_at)
+    cursor.executemany(
+        """
+       INSERT INTO players(puuid, game_name, tagline, league_points, rank, wins, losses,
+                           tier, queue, in_top, last_updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(puuid) DO UPDATE SET
         league_points = excluded.league_points,
@@ -93,54 +95,79 @@ def upsert_player(conn: sqlite3.Connection, players_data_list: list[tuple]):
         tier = excluded.tier,
         in_top = excluded.in_top,
         last_updated_at = excluded.last_updated_at
-    """, [(*p, now) for p in players_data_list])
+    """,
+        [(*p, now) for p in players_data_list],
+    )
 
 
 def ensure_player_exists(conn: sqlite3.Connection, player_data):
     cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO players (puuid, game_name, tagline, league_points, rank, wins, losses, tier, queue, in_top, last_updated_at)
+    cursor.execute(
+        """
+        INSERT INTO players (puuid, game_name, tagline, league_points, rank, wins, losses,
+                             tier, queue, in_top, last_updated_at)
         VALUES (?, ?, ?, 0, '-', 0, 0, 'UNRANKED', 'RANKED_SOLO_5x5', FALSE, ?)
         ON CONFLICT(puuid) DO NOTHING
-    """, (player_data[0], player_data[1], player_data[2], time.time()))
+    """,
+        (player_data[0], player_data[1], player_data[2], time.time()),
+    )
+
 
 def match_exists(conn: sqlite3.Connection, match_id: str):
     cursor = conn.cursor()
-    cursor.execute("SELECT 1 FROM matches WHERE id = ?", (match_id, ))
+    cursor.execute("SELECT 1 FROM matches WHERE id = ?", (match_id,))
     return cursor.fetchone() is not None
+
 
 def insert_match(conn: sqlite3.Connection, match_data: tuple):
     cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO matches(id, game_version, duration, team_win, created_at, started_at, ended_at) VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, match_data)
+    cursor.execute(
+        """
+        INSERT INTO matches(id, game_version, duration, team_win, created_at, started_at, ended_at) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """,
+        match_data,
+    )
+
 
 def insert_players_matches(conn: sqlite3.Connection, participants_data_list: list[tuple]):
     cursor = conn.cursor()
-    cursor.executemany("""
-        INSERT INTO players_matches(player_puuid, match_id, kills, assists, deaths, champion_name, champion_level, champion_exp, gold_earned, gold_spent, position, team_id, total_damage_dealt_to_champions, total_minions_killed, game_surrendered, game_early_surrender, vision_score, win)
+    cursor.executemany(
+        """
+        INSERT INTO players_matches(player_puuid, match_id, kills, assists, deaths, champion_name, 
+                                    champion_level, champion_exp, gold_earned, gold_spent, position,
+                                    team_id, total_damage_dealt_to_champions, 
+                                    total_minions_killed, game_surrendered,
+                                    game_early_surrender, vision_score, win)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, participants_data_list)
+    """,
+        participants_data_list,
+    )
+
 
 def log_ladder_snapshot(conn: sqlite3.Connection, players_data_list: list[tuple]):
     cursor = conn.cursor()
     now = time.time()
-    cursor.executemany("""
-        INSERT INTO ladder_history (player_puuid, league_points, wins, losses, rank_position, snapshot_at)
+    cursor.executemany(
+        """
+        INSERT INTO ladder_history (player_puuid, league_points, wins, losses,
+                                    rank_position, snapshot_at)
         VALUES (?, ?, ?, ?, ?, ?)
-    """, [(*p, now) for p in players_data_list])
+    """,
+        [(*p, now) for p in players_data_list],
+    )
+
 
 def deactivate_players(conn, puuids: list[str]):
     cursor = conn.cursor()
-    cursor.executemany(
-        "UPDATE players SET in_top = FALSE WHERE puuid = ?",
-        [(p,) for p in puuids]
-    )
+    cursor.executemany("UPDATE players SET in_top = FALSE WHERE puuid = ?", [(p,) for p in puuids])
+
 
 def find_active_players(conn: sqlite3.Connection):
     cursor = conn.cursor()
     cursor.execute("SELECT puuid FROM players WHERE in_top = TRUE")
     return {row[0] for row in cursor.fetchall()}
+
 
 def get_last_match_check(conn, puuid: str):
     cursor = conn.cursor()
@@ -148,10 +175,8 @@ def get_last_match_check(conn, puuid: str):
     row = cursor.fetchone()
     return row[0] if row else None
 
+
 def update_last_match_check(conn, puuid: str):
     cursor = conn.cursor()
     timestamp = time.time()
-    cursor.execute(
-        "UPDATE players SET last_match_check_at = ? WHERE puuid = ?",
-        (timestamp, puuid)
-    )
+    cursor.execute("UPDATE players SET last_match_check_at = ? WHERE puuid = ?", (timestamp, puuid))
