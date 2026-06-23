@@ -46,7 +46,7 @@ HEADERS = {"X-Riot-Token": os.getenv("RIOT_API_KEY")}
 DB_PATH = os.getenv("DB_PATH")
 
 
-def process_ladder(conn, riot_api) -> list[str]:
+def process_ladder(conn, riot_api):
     try:
         ladder_df = fetch_ladder_with_names(riot_api, 300)
 

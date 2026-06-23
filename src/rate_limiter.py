@@ -15,7 +15,8 @@ def _check_limit(target_deque: deque, window: int, limit: int):
     now = time.time()
     if len(target_deque) >= limit:
         wait_time = (target_deque[0] + window) - now
-        logger.info(f"Rate limit atteint ({limit} req/{window}s) -> attente {wait_time:.1f}s")
+        if wait_time >= 1:
+            logger.info(f"Rate limit atteint ({limit} req/{window}s) -> attente {wait_time:.1f}s")
         time.sleep(wait_time)
 
 
