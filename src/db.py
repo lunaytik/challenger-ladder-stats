@@ -72,6 +72,7 @@ def init_db(conn: sqlite3.Connection):
         game_early_surrender BOOLEAN NOT NULL,
         vision_score INTEGER NOT NULL,
         win BOOLEAN NOT NULL,
+        neutral_minions_killed INTEGER NOT NULL DEFAULT 0,
         
         FOREIGN KEY (player_puuid) REFERENCES players (puuid),
         FOREIGN KEY (match_id) REFERENCES matches (id)
@@ -138,8 +139,8 @@ def insert_players_matches(conn: sqlite3.Connection, participants_data_list: lis
                                     champion_level, champion_exp, gold_earned, gold_spent, position,
                                     team_id, total_damage_dealt_to_champions, 
                                     total_minions_killed, game_surrendered,
-                                    game_early_surrender, vision_score, win)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                    game_early_surrender, vision_score, win, neutral_minions_killed)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """,
         participants_data_list,
     )
@@ -180,3 +181,27 @@ def update_last_match_check(conn, puuid: str):
     cursor = conn.cursor()
     timestamp = time.time()
     cursor.execute("UPDATE players SET last_match_check_at = ? WHERE puuid = ?", (timestamp, puuid))
+
+
+def get_match_ids_to_update(conn: sqlite3.Connection):
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT match_id
+        FROM players_matches
+        GROUP BY match_id
+        HAVING MAX(neutral_minions_killed) = 0
+    """)
+    return [row[0] for row in cursor.fetchall()]
+
+
+def update_players_matches_neutral_minions(conn: sqlite3.Connection, data):
+    cursor = conn.cursor()
+    cursor.executemany(
+        """
+        UPDATE players_matches 
+        SET neutral_minions_killed = ? 
+        WHERE match_id = ? 
+        AND player_puuid = ?
+    """,
+        data,
+    )
