@@ -42,6 +42,7 @@ def clean_match_data(response):
         "gameEndedInEarlySurrender",
         "visionScore",
         "win",
+        "neutralMinionsKilled",
     ]
 
     participants_infos = pd.json_normalize(
@@ -113,3 +114,16 @@ def new_players_to_tuples(players_infos_df):
         (row["puuid"], row["riotIdGameName"], row["riotIdTagline"])
         for _, row in players_infos_df.iterrows()
     ]
+
+
+def fetch_match_to_fix(riot_api: RiotAPI, match_id: str):
+    url = "https://europe.api.riotgames.com/lol/match/v5/matches/" + match_id
+    resp = riot_api.safe_get(url)
+    return participants_neutral_minions(resp)
+
+
+def participants_neutral_minions(response):
+    participants_infos = pd.json_normalize(
+        response, record_path=[["info", "participants"]], meta=[["metadata", "matchId"]]
+    )
+    return participants_infos[["neutralMinionsKilled", "metadata.matchId", "puuid"]]
