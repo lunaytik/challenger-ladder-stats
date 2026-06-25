@@ -1,13 +1,15 @@
 [project]
 name = "challenger-ladder-stats"
-version = "1.0.0"
-description = "Add your description here"
+version = "0.0.3"
+description = "Projet découverte data"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "matplotlib>=3.11.0",
     "pandas>=3.0.3",
     "python-dotenv>=1.2.2",
     "requests>=2.34.2",
+    "seaborn>=0.13.2",
 ]
 
 [dependency-groups]
