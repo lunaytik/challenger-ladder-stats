@@ -12,5 +12,3 @@ wheels/
 .env
 *.db
 .idea
-
-logs/
